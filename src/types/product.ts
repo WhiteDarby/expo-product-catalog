@@ -9,6 +9,22 @@ export type Product = {
   stock: number;
   thumbnail: string;
   images: string[];
+  brand?: string;
+  tags?: string[];
+  sku?: string;
+  warrantyInformation?: string;
+  shippingInformation?: string;
+  availabilityStatus?: string;
+  reviews?: ProductReview[];
+  returnPolicy?: string;
+  minimumOrderQuantity?: number;
+};
+
+export type ProductReview = {
+  rating: number;
+  comment: string;
+  date: string;
+  reviewerName: string;
 };
 
 export type ProductResponse = {

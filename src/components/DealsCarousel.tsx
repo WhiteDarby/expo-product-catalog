@@ -3,13 +3,14 @@ import { Product } from '../types/product';
 
 type DealsCarouselProps = {
   products: Product[];
+  onProductPress: (product: Product) => void;
 };
 
 function formatPrice(price: number) {
   return `$${price.toFixed(2)}`;
 }
 
-export function DealsCarousel({ products }: DealsCarouselProps) {
+export function DealsCarousel({ products, onProductPress }: DealsCarouselProps) {
   return (
     <ScrollView
       contentContainerStyle={styles.content}
@@ -21,7 +22,12 @@ export function DealsCarousel({ products }: DealsCarouselProps) {
           product.price * (1 - product.discountPercentage / 100);
 
         return (
-          <Pressable accessibilityRole="button" key={product.id} style={styles.card}>
+          <Pressable
+            accessibilityRole="button"
+            key={product.id}
+            onPress={() => onProductPress(product)}
+            style={styles.card}
+          >
             <Image source={{ uri: product.thumbnail }} style={styles.image} />
             <View style={styles.details}>
               <Text numberOfLines={1} style={styles.title}>

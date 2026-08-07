@@ -23,6 +23,16 @@ export async function fetchProducts(
   return response.json() as Promise<ProductResponse>;
 }
 
+export async function fetchProductById(id: number): Promise<ProductResponse['products'][number]> {
+  const response = await fetch(`${API_URL}/${id}`);
+
+  if (!response.ok) {
+    throw new Error('Unable to load product details.');
+  }
+
+  return response.json();
+}
+
 export async function fetchTopDeals(): Promise<ProductResponse> {
   const response = await fetch(
     `${API_URL}?sortBy=discountPercentage&order=desc&limit=6`,

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   ActivityIndicator,
   FlatList,
@@ -16,6 +18,7 @@ import { DealsCarousel } from '../components/DealsCarousel';
 import { ProductCard } from '../components/ProductCard';
 import { SearchBar } from '../components/SearchBar';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { RootStackParamList } from '../navigation/types';
 import {
   loadCatalogSections,
   loadProducts,
@@ -30,6 +33,7 @@ export function ProductListingScreen() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const listRef = useRef<FlatList<Product>>(null);
   const dispatch = useAppDispatch();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'Products'>>();
   const {
     categories,
     category: selectedCategory,
@@ -129,8 +133,20 @@ export function ProductListingScreen() {
   }, [debouncedQuery, error, isLoading, loadFirstPage]);
 
   const renderProduct = useCallback(
-    ({ item }: { item: Product }) => <ProductCard product={item} />,
-    [],
+    ({ item }: { item: Product }) => (
+      <ProductCard
+        onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
+        product={item}
+      />
+    ),
+    [navigation],
+  );
+
+  const openProductDetail = useCallback(
+    (product: Product) => {
+      navigation.navigate('ProductDetail', { productId: product.id });
+    },
+    [navigation],
   );
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -159,7 +175,7 @@ export function ProductListingScreen() {
                   <Text style={styles.sectionTitle}>Top deals</Text>
                   <Text style={styles.sectionHint}>Limited-time picks</Text>
                 </View>
-                <DealsCarousel products={topDeals} />
+                <DealsCarousel onProductPress={openProductDetail} products={topDeals} />
               </View>
             ) : null}
             <View style={styles.categorySection}>

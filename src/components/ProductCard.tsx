@@ -3,19 +3,29 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Product } from '../types/product';
 
 type ProductCardProps = {
+  compact?: boolean;
   product: Product;
+  onPress?: () => void;
 };
 
 function formatPrice(price: number) {
   return `$${price.toFixed(2)}`;
 }
 
-export const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({
+  compact = false,
+  product,
+  onPress,
+}: ProductCardProps) {
   const discountedPrice =
     product.price * (1 - product.discountPercentage / 100);
 
   return (
-    <Pressable accessibilityRole="button" style={styles.card}>
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.card, compact && styles.compactCard]}
+    >
       <View style={styles.imageWrapper}>
         <Image source={{ uri: product.thumbnail }} style={styles.image} />
         {product.discountPercentage > 0 ? (
@@ -63,6 +73,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.7,
     marginBottom: 5,
     textTransform: 'uppercase',
+  },
+  compactCard: {
+    flex: 0,
+    marginBottom: 0,
+    width: 184,
   },
   content: {
     padding: 12,
