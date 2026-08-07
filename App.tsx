@@ -9,6 +9,7 @@ import { ReturnPolicyScreen } from './src/screens/ReturnPolicyScreen';
 import { RootStackParamList } from './src/navigation/types';
 import { CartPersistence } from './src/components/CartPersistence';
 import { SettingsPersistence } from './src/components/SettingsPersistence';
+import { AnalyticsPersistence } from './src/components/AnalyticsPersistence';
 import { useAppTheme } from './src/theme/theme';
 import { store } from './src/store/store';
 
@@ -20,6 +21,7 @@ export default function App() {
       <Provider store={store}>
         <CartPersistence />
         <SettingsPersistence />
+        <AnalyticsPersistence />
         <ThemedNavigation />
       </Provider>
     </SafeAreaProvider>

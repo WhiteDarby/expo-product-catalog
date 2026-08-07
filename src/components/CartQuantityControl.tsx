@@ -6,6 +6,7 @@ import {
   increaseQuantity,
   selectCartQuantity,
 } from '../store/cartSlice';
+import { recordEvent } from '../store/analyticsSlice';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { useAppTheme } from '../theme/theme';
 import { Product } from '../types/product';
@@ -35,6 +36,12 @@ export function CartQuantityControl({
   const addProduct = () => {
     dispatch(addToCart(product));
     if (quantity === 0) {
+      dispatch(
+        recordEvent({
+          metadata: { productId: product.id, productTitle: product.title },
+          type: 'add_to_cart',
+        }),
+      );
       console.log('add_to_cart', {
         productId: product.id,
         timestamp: new Date().toISOString(),

@@ -26,6 +26,7 @@ import {
   setCategory,
   setQuery,
 } from '../store/productsSlice';
+import { recordEvent } from '../store/analyticsSlice';
 import { Product } from '../types/product';
 import { useAppTheme } from '../theme/theme';
 
@@ -72,8 +73,16 @@ export function ProductListingScreen() {
   }, [dispatch, selectedCategory]);
 
   useEffect(() => {
+    if (debouncedQuery.trim()) {
+      dispatch(
+        recordEvent({
+          metadata: { query: debouncedQuery.trim() },
+          type: 'search_performed',
+        }),
+      );
+    }
     void loadFirstPage(debouncedQuery);
-  }, [debouncedQuery, loadFirstPage]);
+  }, [debouncedQuery, dispatch, loadFirstPage]);
 
   const loadMore = useCallback(async () => {
     if (isLoading || isLoadingMore || !hasMore || products.length === 0) return;
