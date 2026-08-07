@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -26,6 +27,7 @@ import {
   setQuery,
 } from '../store/productsSlice';
 import { Product } from '../types/product';
+import { useAppTheme } from '../theme/theme';
 
 export function ProductListingScreen() {
   const [query, setInputQuery] = useState('');
@@ -33,7 +35,8 @@ export function ProductListingScreen() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const listRef = useRef<FlatList<Product>>(null);
   const dispatch = useAppDispatch();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'Products'>>();
+  const { colors } = useAppTheme();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const {
     categories,
     category: selectedCategory,
@@ -101,24 +104,24 @@ export function ProductListingScreen() {
 
   const renderFooter = useCallback(() => {
     if (!isLoadingMore) return <View style={styles.footerSpace} />;
-    return <ActivityIndicator color="#17191C" style={styles.footerLoader} />;
-  }, [isLoadingMore]);
+    return <ActivityIndicator color={colors.text} style={styles.footerLoader} />;
+  }, [colors, isLoadingMore]);
 
   const renderEmpty = useCallback(() => {
     if (isLoading) {
-      return <ActivityIndicator color="#17191C" size="large" style={styles.centerState} />;
+      return <ActivityIndicator color={colors.text} size="large" style={styles.centerState} />;
     }
 
     if (error) {
       return (
         <View style={styles.centerState}>
-          <Text style={styles.stateTitle}>Something went wrong</Text>
-          <Text style={styles.stateMessage}>{error}</Text>
+          <Text style={[styles.stateTitle, { color: colors.text }]}>Something went wrong</Text>
+          <Text style={[styles.stateMessage, { color: colors.mutedText }]}>{error}</Text>
           <TouchableOpacity
             onPress={() => void loadFirstPage(debouncedQuery)}
-            style={styles.retryButton}
+            style={[styles.retryButton, { backgroundColor: colors.text }]}
           >
-            <Text style={styles.retryText}>Try again</Text>
+            <Text style={[styles.retryText, { color: colors.background }]}>Try again</Text>
           </TouchableOpacity>
         </View>
       );
@@ -126,11 +129,11 @@ export function ProductListingScreen() {
 
     return (
       <View style={styles.centerState}>
-        <Text style={styles.stateTitle}>No products found</Text>
-        <Text style={styles.stateMessage}>Try searching for something else.</Text>
+        <Text style={[styles.stateTitle, { color: colors.text }]}>No products found</Text>
+        <Text style={[styles.stateMessage, { color: colors.mutedText }]}>Try searching for something else.</Text>
       </View>
     );
-  }, [debouncedQuery, error, isLoading, loadFirstPage]);
+  }, [colors, debouncedQuery, error, isLoading, loadFirstPage]);
 
   const renderProduct = useCallback(
     ({ item }: { item: Product }) => (
@@ -154,7 +157,7 @@ export function ProductListingScreen() {
   };
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.background }] }>
       <FlatList
         columnWrapperStyle={styles.columnWrapper}
         contentContainerStyle={styles.listContent}
@@ -166,22 +169,22 @@ export function ProductListingScreen() {
         ListFooterComponent={renderFooter}
         ListHeaderComponent={
           <View>
-            <Text style={styles.eyebrow}>NUA MARKET</Text>
-            <Text style={styles.heading}>Find your next favorite</Text>
+            <Text style={[styles.eyebrow, { color: colors.accent }]}>NUA MARKET</Text>
+            <Text style={[styles.heading, { color: colors.text }]}>Find your next favorite</Text>
             <SearchBar onChangeText={handleQueryChange} value={query} />
             {!query && topDeals.length > 0 ? (
               <View>
                 <View style={styles.sectionTitleRow}>
-                  <Text style={styles.sectionTitle}>Top deals</Text>
-                  <Text style={styles.sectionHint}>Limited-time picks</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Top deals</Text>
+                  <Text style={[styles.sectionHint, { color: colors.subtleText }]}>Limited-time picks</Text>
                 </View>
                 <DealsCarousel onProductPress={openProductDetail} products={topDeals} />
               </View>
             ) : null}
             <View style={styles.categorySection}>
-              <Text style={styles.sectionTitle}>Shop by category</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Shop by category</Text>
               {isLoadingSections ? (
-                <ActivityIndicator color="#17191C" style={styles.categoryLoader} />
+                <ActivityIndicator color={colors.text} style={styles.categoryLoader} />
               ) : (
                 <CategoryChips
                   categories={categories}
@@ -191,14 +194,14 @@ export function ProductListingScreen() {
               )}
             </View>
             <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>
+              <Text style={[styles.resultLabel, { color: colors.text }]}>
                 {query
                   ? 'Search results'
                   : selectedCategory
                     ? selectedCategory.replace(/-/g, ' ')
                     : 'All products'}
               </Text>
-              {!isLoading && total > 0 ? <Text style={styles.resultCount}>{total} items</Text> : null}
+              {!isLoading && total > 0 ? <Text style={[styles.resultCount, { color: colors.subtleText }]}>{total} items</Text> : null}
             </View>
           </View>
         }
@@ -210,7 +213,7 @@ export function ProductListingScreen() {
           <RefreshControl
             onRefresh={() => void loadFirstPage(debouncedQuery, true)}
             refreshing={isRefreshing}
-            tintColor="#17191C"
+            tintColor={colors.text}
           />
         }
         renderItem={renderProduct}
@@ -222,11 +225,9 @@ export function ProductListingScreen() {
           accessibilityLabel="Scroll to top"
           accessibilityRole="button"
           onPress={() => listRef.current?.scrollToOffset({ animated: true, offset: 0 })}
-          style={styles.scrollTopButton}
+          style={[styles.scrollTopButton, { backgroundColor: colors.surface }]}
         >
-          <View style={[styles.arrowLine, styles.arrowHeadLeft]} />
-          <View style={[styles.arrowLine, styles.arrowHeadRight]} />
-          <View style={[styles.arrowLine, styles.arrowStem]} />
+          <Ionicons color={colors.text} name="arrow-up" size={22} />
         </Pressable>
       ) : null}
     </View>
@@ -246,29 +247,6 @@ const styles = StyleSheet.create({
   },
   categorySection: {
     marginTop: 24,
-  },
-  arrowHeadLeft: {
-    left: 20,
-    top: 16,
-    transform: [{ rotate: '-45deg' }],
-  },
-  arrowHeadRight: {
-    left: 26,
-    top: 16,
-    transform: [{ rotate: '45deg' }],
-  },
-  arrowLine: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 1,
-    height: 2,
-    position: 'absolute',
-    width: 10,
-  },
-  arrowStem: {
-    height: 14,
-    left: 27,
-    top: 17,
-    width: 2,
   },
   columnWrapper: {
     gap: 12,
@@ -296,7 +274,7 @@ const styles = StyleSheet.create({
     maxWidth: 290,
   },
   listContent: {
-    paddingBottom: 24,
+    paddingBottom: 110,
     paddingHorizontal: 16,
     paddingTop: 22,
   },
@@ -350,17 +328,17 @@ const styles = StyleSheet.create({
   },
   scrollTopButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(23, 25, 28, 0.65)',
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
     borderRadius: 28,
-    bottom: 24,
+    bottom: 100,
     elevation: 5,
     height: 56,
     justifyContent: 'center',
     position: 'absolute',
-    right: 20,
+    right: 32,
     shadowColor: '#17191C',
     shadowOffset: { height: 3, width: 0 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.08,
     shadowRadius: 6,
     width: 56,
   },

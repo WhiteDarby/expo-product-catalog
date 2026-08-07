@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { useAppTheme } from '../theme/theme';
 
 type SearchBarProps = {
   value: string;
@@ -6,17 +7,19 @@ type SearchBarProps = {
 };
 
 export function SearchBar({ value, onChangeText }: SearchBarProps) {
+  const { colors } = useAppTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.input }]}>
       <TextInput
         accessibilityLabel="Search products"
         autoCapitalize="none"
         autoCorrect={false}
         onChangeText={onChangeText}
         placeholder="Search products"
-        placeholderTextColor="#8A8F98"
+        placeholderTextColor={colors.subtleText}
         returnKeyType="search"
-        style={styles.input}
+        style={[styles.input, { color: colors.text }]}
         value={value}
       />
       {value.length > 0 ? (
@@ -27,8 +30,8 @@ export function SearchBar({ value, onChangeText }: SearchBarProps) {
           onPress={() => onChangeText('')}
           style={styles.clearButton}
         >
-          <View style={[styles.iconLine, styles.iconLineOne]} />
-          <View style={[styles.iconLine, styles.iconLineTwo]} />
+          <View style={[styles.iconLine, styles.iconLineOne, { backgroundColor: colors.mutedText }]} />
+          <View style={[styles.iconLine, styles.iconLineTwo, { backgroundColor: colors.mutedText }]} />
         </Pressable>
       ) : null}
     </View>

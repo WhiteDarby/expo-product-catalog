@@ -1,4 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { useAppTheme } from '../theme/theme';
 
 type CategoryChipsProps = {
   categories: string[];
@@ -15,6 +16,8 @@ export function CategoryChips({
   selectedCategory,
   onSelect,
 }: CategoryChipsProps) {
+  const { colors } = useAppTheme();
+
   return (
     <ScrollView
       contentContainerStyle={styles.content}
@@ -23,9 +26,9 @@ export function CategoryChips({
     >
       <Pressable
         onPress={() => onSelect(null)}
-        style={[styles.chip, !selectedCategory && styles.selectedChip]}
+        style={[styles.chip, { backgroundColor: colors.input }, !selectedCategory && { backgroundColor: colors.text }]}
       >
-        <Text style={[styles.text, !selectedCategory && styles.selectedText]}>All</Text>
+        <Text style={[styles.text, { color: colors.mutedText }, !selectedCategory && { color: colors.background }]}>All</Text>
       </Pressable>
       {categories.map((category) => {
         const isSelected = selectedCategory === category;
@@ -33,9 +36,9 @@ export function CategoryChips({
           <Pressable
             key={category}
             onPress={() => onSelect(isSelected ? null : category)}
-            style={[styles.chip, isSelected && styles.selectedChip]}
+            style={[styles.chip, { backgroundColor: colors.input }, isSelected && { backgroundColor: colors.text }]}
           >
-            <Text style={[styles.text, isSelected && styles.selectedText]}>
+            <Text style={[styles.text, { color: colors.mutedText }, isSelected && { color: colors.background }]}>
               {labelForCategory(category)}
             </Text>
           </Pressable>
@@ -56,14 +59,7 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 2,
   },
-  selectedChip: {
-    backgroundColor: '#17191C',
-  },
-  selectedText: {
-    color: '#FFFFFF',
-  },
   text: {
-    color: '#5F646C',
     fontSize: 13,
     fontWeight: '700',
     textTransform: 'capitalize',

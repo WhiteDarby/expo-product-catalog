@@ -1,4 +1,11 @@
 export type RootStackParamList = {
-  Products: undefined;
+  MainTabs: undefined;
   ProductDetail: { productId: number };
+  ReturnPolicy: undefined;
+};
+
+export type TabParamList = {
+  Home: undefined;
+  Cart: undefined;
+  Settings: undefined;
 };

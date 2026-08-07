@@ -17,6 +17,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProductCard } from '../components/ProductCard';
 import { RootStackParamList } from '../navigation/types';
 import { fetchProductById, fetchProducts } from '../services/products';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  addToCart,
+  decreaseQuantity,
+  increaseQuantity,
+  selectCartItems,
+} from '../store/cartSlice';
+import { useAppTheme } from '../theme/theme';
 import { Product } from '../types/product';
 
 type ProductDetailScreenProps = NativeStackScreenProps<
@@ -30,6 +38,9 @@ function formatPrice(price: number) {
 
 export function ProductDetailScreen({ navigation, route }: ProductDetailScreenProps) {
   const { width } = useWindowDimensions();
+  const dispatch = useAppDispatch();
+  const { colors } = useAppTheme();
+  const cartItems = useAppSelector(selectCartItems);
   const [product, setProduct] = useState<Product | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -83,19 +94,19 @@ export function ProductDetailScreen({ navigation, route }: ProductDetailScreenPr
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.stateScreen}>
-        <ActivityIndicator color="#17191C" size="large" />
+      <SafeAreaView style={[styles.stateScreen, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.text} size="large" />
       </SafeAreaView>
     );
   }
 
   if (error || !product) {
     return (
-      <SafeAreaView style={styles.stateScreen}>
-        <Text style={styles.stateTitle}>Something went wrong</Text>
-        <Text style={styles.stateMessage}>{error ?? 'Product not found.'}</Text>
-        <Pressable onPress={loadProduct} style={styles.retryButton}>
-          <Text style={styles.retryText}>Try again</Text>
+      <SafeAreaView style={[styles.stateScreen, { backgroundColor: colors.background }]}>
+        <Text style={[styles.stateTitle, { color: colors.text }]}>Something went wrong</Text>
+        <Text style={[styles.stateMessage, { color: colors.mutedText }]}>{error ?? 'Product not found.'}</Text>
+        <Pressable onPress={loadProduct} style={[styles.retryButton, { backgroundColor: colors.text }]}>
+          <Text style={[styles.retryText, { color: colors.background }]}>Try again</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -105,14 +116,26 @@ export function ProductDetailScreen({ navigation, route }: ProductDetailScreenPr
     product.price * (1 - product.discountPercentage / 100);
   const images = product.images.length > 0 ? product.images : [product.thumbnail];
 
+  const handleAddToCart = () => {
+    dispatch(addToCart(product));
+    console.log('add_to_cart', {
+      productId: product.id,
+      timestamp: new Date().toISOString(),
+    });
+  };
+
+  const cartQuantity = cartItems.find(
+    (item) => item.product.id === product.id,
+  )?.quantity ?? 0;
+
   const handleImageScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     setActiveImage(Math.round(event.nativeEvent.contentOffset.x / width));
   };
 
   return (
-    <SafeAreaView edges={['top']} style={styles.screen}>
+    <SafeAreaView edges={['top']} style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.gallery}>
+        <View style={[styles.gallery, { backgroundColor: colors.imageBackground }]}>
           <FlatList
             data={images}
             horizontal
@@ -120,7 +143,7 @@ export function ProductDetailScreen({ navigation, route }: ProductDetailScreenPr
             onScroll={handleImageScroll}
             pagingEnabled
             renderItem={({ item }) => (
-              <Image source={{ uri: item }} style={[styles.galleryImage, { width }]} />
+              <Image source={{ uri: item }} style={[styles.galleryImage, { backgroundColor: colors.imageBackground, width }]} />
             )}
             scrollEventThrottle={16}
             showsHorizontalScrollIndicator={false}
@@ -139,47 +162,82 @@ export function ProductDetailScreen({ navigation, route }: ProductDetailScreenPr
 
         <View style={styles.content}>
           <View style={styles.metaRow}>
-            <Text style={styles.category}>{product.category}</Text>
-            {product.brand ? <Text style={styles.brand}>{product.brand}</Text> : null}
+            <Text style={[styles.category, { color: colors.accent }]}>{product.category}</Text>
+            {product.brand ? <Text style={[styles.brand, { color: colors.mutedText }]}>{product.brand}</Text> : null}
           </View>
-          <Text style={styles.title}>{product.title}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{product.title}</Text>
           <View style={styles.ratingRow}>
-            <Text style={styles.rating}>★ {product.rating.toFixed(1)}</Text>
-            <Text style={styles.reviewCount}>
+            <Text style={[styles.rating, { color: colors.accent }]}>★ {product.rating.toFixed(1)}</Text>
+            <Text style={[styles.reviewCount, { color: colors.mutedText }]}>
               {product.reviews?.length ?? 0} reviews
             </Text>
           </View>
 
           <View style={styles.priceBlock}>
-            <Text style={styles.price}>{formatPrice(discountedPrice)}</Text>
-            <Text style={styles.originalPrice}>{formatPrice(product.price)}</Text>
-            <View style={styles.discountBadge}>
-              <Text style={styles.discountText}>
+            <Text style={[styles.price, { color: colors.text }]}>{formatPrice(discountedPrice)}</Text>
+            <Text style={[styles.originalPrice, { color: colors.subtleText }]}>{formatPrice(product.price)}</Text>
+            <View style={[styles.discountBadge, { backgroundColor: colors.dangerSoft }]}>
+              <Text style={[styles.discountText, { color: colors.danger }]}>
                 {Math.round(product.discountPercentage)}% off
               </Text>
             </View>
           </View>
 
-          <View style={styles.availabilityCard}>
+          <View style={[styles.availabilityCard, { backgroundColor: colors.successSoft }]}>
             <View>
-              <Text style={styles.availabilityLabel}>Availability</Text>
-              <Text style={styles.availabilityValue}>
+              <Text style={[styles.availabilityLabel, { color: colors.mutedText }]}>Availability</Text>
+              <Text style={[styles.availabilityValue, { color: colors.success }]}>
                 {product.availabilityStatus ?? `${product.stock} in stock`}
               </Text>
             </View>
-            <Text style={styles.shipping}>{product.shippingInformation}</Text>
+            <Text style={[styles.shipping, { color: colors.success }]}>{product.shippingInformation}</Text>
           </View>
 
-          <Text style={styles.sectionTitle}>About this product</Text>
-          <Text style={styles.description}>{product.description}</Text>
+          {cartQuantity === 0 ? (
+            <Pressable
+              onPress={handleAddToCart}
+              style={[styles.addButton, { backgroundColor: colors.text }]}
+            >
+              <Text style={[styles.addButtonText, { color: colors.background }]}>Add to cart</Text>
+            </Pressable>
+          ) : (
+            <View style={[styles.quantityStepper, { backgroundColor: colors.text }]}>
+              <Pressable
+                accessibilityLabel={`Decrease ${product.title} quantity`}
+                onPress={() => dispatch(decreaseQuantity(product.id))}
+                style={styles.stepperButton}
+              >
+                <Text style={[styles.stepperButtonText, { color: colors.background }]}>-</Text>
+              </Pressable>
+              <Text style={[styles.stepperQuantity, { color: colors.background }]}>
+                {cartQuantity}
+              </Text>
+              <Pressable
+                accessibilityLabel={`Increase ${product.title} quantity`}
+                onPress={() => dispatch(increaseQuantity(product.id))}
+                style={styles.stepperButton}
+              >
+                <Text style={[styles.stepperButtonText, { color: colors.background }]}>+</Text>
+              </Pressable>
+            </View>
+          )}
 
-          <Text style={styles.sectionTitle}>Product details</Text>
-          <View style={styles.detailsCard}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>About this product</Text>
+          <Text style={[styles.description, { color: colors.mutedText }]}>{product.description}</Text>
+
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Product details</Text>
+          <View style={[styles.detailsCard, { backgroundColor: colors.surface }]}>
             {product.warrantyInformation ? (
               <DetailRow label="Warranty" value={product.warrantyInformation} />
             ) : null}
             {product.returnPolicy ? (
-              <DetailRow label="Return policy" value={product.returnPolicy} />
+              <Pressable
+                onPress={() => navigation.navigate('ReturnPolicy')}
+                style={styles.policyRow}
+              >
+                <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Return policy</Text>
+                <Text style={[styles.policyLink, { color: colors.accent }]}>{product.returnPolicy}</Text>
+              </Pressable>
             ) : null}
             {product.minimumOrderQuantity ? (
               <DetailRow
@@ -192,14 +250,15 @@ export function ProductDetailScreen({ navigation, route }: ProductDetailScreenPr
 
           {isRelatedLoading || relatedProducts.length > 0 ? (
             <View style={styles.relatedSection}>
-              <Text style={styles.sectionTitle}>You may also like</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>You may also like</Text>
               {isRelatedLoading ? (
-                <ActivityIndicator color="#17191C" style={styles.relatedLoader} />
+                <ActivityIndicator color={colors.text} style={styles.relatedLoader} />
               ) : (
                 <FlatList
                   contentContainerStyle={styles.relatedList}
                   data={relatedProducts}
                   horizontal
+                  ItemSeparatorComponent={() => <View style={styles.relatedSeparator} />}
                   keyExtractor={(item) => String(item.id)}
                   renderItem={({ item }) => (
                     <ProductCard
@@ -221,19 +280,21 @@ export function ProductDetailScreen({ navigation, route }: ProductDetailScreenPr
         accessibilityLabel="Go back"
         accessibilityRole="button"
         onPress={() => navigation.goBack()}
-        style={styles.backButton}
+        style={[styles.backButton, { backgroundColor: colors.surface }]}
       >
-        <View style={styles.backArrow} />
+        <View style={[styles.backArrow, { borderBottomColor: colors.text, borderLeftColor: colors.text }]} />
       </Pressable>
     </SafeAreaView>
   );
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
+  const { colors } = useAppTheme();
+
   return (
     <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue}>{value}</Text>
+      <Text style={[styles.detailLabel, { color: colors.mutedText }]}>{label}</Text>
+      <Text style={[styles.detailValue, { color: colors.text }]}>{value}</Text>
     </View>
   );
 }
@@ -242,6 +303,18 @@ const styles = StyleSheet.create({
   activeDot: {
     backgroundColor: '#17191C',
     width: 18,
+  },
+  addButton: {
+    alignItems: 'center',
+    backgroundColor: '#17191C',
+    borderRadius: 14,
+    marginBottom: 30,
+    paddingVertical: 16,
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
   },
   availabilityCard: {
     alignItems: 'center',
@@ -392,6 +465,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 24,
   },
+  quantityStepper: {
+    alignItems: 'center',
+    borderRadius: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 30,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+  stepperButton: {
+    alignItems: 'center',
+    borderRadius: 10,
+    height: 42,
+    justifyContent: 'center',
+    width: 48,
+  },
+  stepperButtonText: {
+    fontSize: 25,
+    fontWeight: '500',
+    lineHeight: 28,
+  },
+  stepperQuantity: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  policyLink: {
+    color: '#8B6215',
+    fontSize: 13,
+    fontWeight: '700',
+    marginLeft: 16,
+    maxWidth: '60%',
+    textAlign: 'right',
+  },
+  policyRow: {
+    borderBottomColor: '#E7E8E5',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+  },
   rating: {
     color: '#8B6215',
     fontSize: 14,
@@ -412,6 +525,9 @@ const styles = StyleSheet.create({
   },
   relatedSection: {
     marginBottom: 24,
+  },
+  relatedSeparator: {
+    width: 12,
   },
   retryButton: {
     backgroundColor: '#17191C',

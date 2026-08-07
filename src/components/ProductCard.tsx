@@ -1,6 +1,8 @@
 import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { CartQuantityControl } from './CartQuantityControl';
 import { Product } from '../types/product';
+import { useAppTheme } from '../theme/theme';
 
 type ProductCardProps = {
   compact?: boolean;
@@ -17,6 +19,7 @@ export const ProductCard = memo(function ProductCard({
   product,
   onPress,
 }: ProductCardProps) {
+  const { colors } = useAppTheme();
   const discountedPrice =
     product.price * (1 - product.discountPercentage / 100);
 
@@ -24,30 +27,33 @@ export const ProductCard = memo(function ProductCard({
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      style={[styles.card, compact && styles.compactCard]}
+      style={[styles.card, { backgroundColor: colors.surface }, compact && styles.compactCard]}
     >
-      <View style={styles.imageWrapper}>
+      <View style={[styles.imageWrapper, { backgroundColor: colors.imageBackground }]}>
         <Image source={{ uri: product.thumbnail }} style={styles.image} />
         {product.discountPercentage > 0 ? (
-          <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>
+          <View
+            style={[styles.discountBadge, { backgroundColor: colors.danger }]}
+          >
+            <Text style={[styles.discountText, { color: colors.background }]}>
               -{Math.round(product.discountPercentage)}%
             </Text>
           </View>
         ) : null}
+        <CartQuantityControl compact={compact} product={product} />
       </View>
-      <View style={styles.content}>
-        <Text numberOfLines={1} style={styles.category}>
+      <View style={[styles.content, compact && styles.compactContent]}>
+        <Text numberOfLines={1} style={[styles.category, { color: colors.mutedText }]}>
           {product.category}
         </Text>
-        <Text numberOfLines={2} style={styles.title}>
+        <Text numberOfLines={2} style={[styles.title, { color: colors.text }]}>
           {product.title}
         </Text>
         <View style={styles.priceRow}>
-          <Text style={styles.price}>{formatPrice(discountedPrice)}</Text>
-          <Text style={styles.originalPrice}>{formatPrice(product.price)}</Text>
+          <Text style={[styles.price, { color: colors.text }]}>{formatPrice(discountedPrice)}</Text>
+          <Text style={[styles.originalPrice, { color: colors.subtleText }]}>{formatPrice(product.price)}</Text>
         </View>
-        <Text style={styles.rating}>★ {product.rating.toFixed(1)}</Text>
+        <Text style={[styles.rating, { color: colors.accent }]}>★ {product.rating.toFixed(1)}</Text>
       </View>
     </Pressable>
   );
@@ -61,6 +67,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 16,
     overflow: 'hidden',
+    position: 'relative',
     shadowColor: '#1C2026',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -76,8 +83,12 @@ const styles = StyleSheet.create({
   },
   compactCard: {
     flex: 0,
+    height: 292,
     marginBottom: 0,
     width: 184,
+  },
+  compactContent: {
+    minHeight: 142,
   },
   content: {
     padding: 12,
@@ -103,6 +114,7 @@ const styles = StyleSheet.create({
   imageWrapper: {
     backgroundColor: '#F5F5F2',
     height: 150,
+    position: 'relative',
   },
   originalPrice: {
     color: '#969BA3',

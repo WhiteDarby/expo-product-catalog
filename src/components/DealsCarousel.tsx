@@ -1,5 +1,7 @@
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { CartQuantityControl } from './CartQuantityControl';
 import { Product } from '../types/product';
+import { useAppTheme } from '../theme/theme';
 
 type DealsCarouselProps = {
   products: Product[];
@@ -11,6 +13,8 @@ function formatPrice(price: number) {
 }
 
 export function DealsCarousel({ products, onProductPress }: DealsCarouselProps) {
+  const { colors } = useAppTheme();
+
   return (
     <ScrollView
       contentContainerStyle={styles.content}
@@ -26,19 +30,22 @@ export function DealsCarousel({ products, onProductPress }: DealsCarouselProps) 
             accessibilityRole="button"
             key={product.id}
             onPress={() => onProductPress(product)}
-            style={styles.card}
+            style={[styles.card, { backgroundColor: colors.accentSoft }]}
           >
-            <Image source={{ uri: product.thumbnail }} style={styles.image} />
+            <View style={styles.imageWrapper}>
+              <Image source={{ uri: product.thumbnail }} style={[styles.image, { backgroundColor: colors.imageBackground }]} />
+              <CartQuantityControl compact product={product} />
+            </View>
             <View style={styles.details}>
-              <Text numberOfLines={1} style={styles.title}>
+              <Text numberOfLines={1} style={[styles.title, { color: colors.text }]}>
                 {product.title}
               </Text>
-              <Text style={styles.discount}>
+              <Text style={[styles.discount, { color: colors.danger }]}>
                 Save {Math.round(product.discountPercentage)}%
               </Text>
               <View style={styles.priceRow}>
-                <Text style={styles.price}>{formatPrice(discountedPrice)}</Text>
-                <Text style={styles.originalPrice}>{formatPrice(product.price)}</Text>
+                <Text style={[styles.price, { color: colors.text }]}>{formatPrice(discountedPrice)}</Text>
+                <Text style={[styles.originalPrice, { color: colors.subtleText }]}>{formatPrice(product.price)}</Text>
               </View>
             </View>
           </Pressable>
@@ -55,6 +62,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginRight: 12,
     overflow: 'hidden',
+    position: 'relative',
     width: 258,
   },
   content: {
@@ -74,6 +82,11 @@ const styles = StyleSheet.create({
   image: {
     backgroundColor: '#E9DDCF',
     height: 122,
+    width: 92,
+  },
+  imageWrapper: {
+    height: 122,
+    position: 'relative',
     width: 92,
   },
   originalPrice: {
