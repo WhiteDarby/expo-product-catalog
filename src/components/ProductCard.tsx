@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Product } from '../types/product';
 
@@ -9,7 +10,7 @@ function formatPrice(price: number) {
   return `$${price.toFixed(2)}`;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
   const discountedPrice =
     product.price * (1 - product.discountPercentage / 100);
 
@@ -40,7 +41,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

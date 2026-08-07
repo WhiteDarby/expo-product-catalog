@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  NativeSyntheticEvent,
+  Pressable,
   RefreshControl,
+  NativeScrollEvent,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -19,10 +22,13 @@ import {
   setCategory,
   setQuery,
 } from '../store/productsSlice';
+import { Product } from '../types/product';
 
 export function ProductListingScreen() {
   const [query, setInputQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const listRef = useRef<FlatList<Product>>(null);
   const dispatch = useAppDispatch();
   const {
     categories,
@@ -89,12 +95,12 @@ export function ProductListingScreen() {
     if (value.trim()) dispatch(setCategory(null));
   };
 
-  const renderFooter = () => {
+  const renderFooter = useCallback(() => {
     if (!isLoadingMore) return <View style={styles.footerSpace} />;
     return <ActivityIndicator color="#17191C" style={styles.footerLoader} />;
-  };
+  }, [isLoadingMore]);
 
-  const renderEmpty = () => {
+  const renderEmpty = useCallback(() => {
     if (isLoading) {
       return <ActivityIndicator color="#17191C" size="large" style={styles.centerState} />;
     }
@@ -120,6 +126,15 @@ export function ProductListingScreen() {
         <Text style={styles.stateMessage}>Try searching for something else.</Text>
       </View>
     );
+  }, [debouncedQuery, error, isLoading, loadFirstPage]);
+
+  const renderProduct = useCallback(
+    ({ item }: { item: Product }) => <ProductCard product={item} />,
+    [],
+  );
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    setShowScrollTop(event.nativeEvent.contentOffset.y > 500);
   };
 
   return (
@@ -129,6 +144,8 @@ export function ProductListingScreen() {
         contentContainerStyle={styles.listContent}
         data={products}
         keyExtractor={(item) => String(item.id)}
+        onScroll={handleScroll}
+        ref={listRef}
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={renderFooter}
         ListHeaderComponent={
@@ -169,6 +186,7 @@ export function ProductListingScreen() {
             </View>
           </View>
         }
+        keyboardShouldPersistTaps="handled"
         numColumns={2}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
@@ -179,9 +197,22 @@ export function ProductListingScreen() {
             tintColor="#17191C"
           />
         }
-        renderItem={({ item }) => <ProductCard product={item} />}
+        renderItem={renderProduct}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
       />
+      {showScrollTop ? (
+        <Pressable
+          accessibilityLabel="Scroll to top"
+          accessibilityRole="button"
+          onPress={() => listRef.current?.scrollToOffset({ animated: true, offset: 0 })}
+          style={styles.scrollTopButton}
+        >
+          <View style={[styles.arrowLine, styles.arrowHeadLeft]} />
+          <View style={[styles.arrowLine, styles.arrowHeadRight]} />
+          <View style={[styles.arrowLine, styles.arrowStem]} />
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -199,6 +230,29 @@ const styles = StyleSheet.create({
   },
   categorySection: {
     marginTop: 24,
+  },
+  arrowHeadLeft: {
+    left: 20,
+    top: 16,
+    transform: [{ rotate: '-45deg' }],
+  },
+  arrowHeadRight: {
+    left: 26,
+    top: 16,
+    transform: [{ rotate: '45deg' }],
+  },
+  arrowLine: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 1,
+    height: 2,
+    position: 'absolute',
+    width: 10,
+  },
+  arrowStem: {
+    height: 14,
+    left: 27,
+    top: 17,
+    width: 2,
   },
   columnWrapper: {
     gap: 12,
@@ -277,6 +331,22 @@ const styles = StyleSheet.create({
   screen: {
     backgroundColor: '#FBFBF9',
     flex: 1,
+  },
+  scrollTopButton: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(23, 25, 28, 0.65)',
+    borderRadius: 28,
+    bottom: 24,
+    elevation: 5,
+    height: 56,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 20,
+    shadowColor: '#17191C',
+    shadowOffset: { height: 3, width: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    width: 56,
   },
   stateMessage: {
     color: '#777D86',
