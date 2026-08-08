@@ -2,6 +2,20 @@
 
 A React Native product discovery app built with Expo and TypeScript. Nua Market uses the DummyJSON Products API to provide paginated browsing, debounced search, category discovery, product details, related products, a persisted cart, offline catalog fallback, analytics logging, and theme preferences.
 
+## Demo Walkthrough
+
+[Watch the 2–3 minute Loom walkthrough](https://www.loom.com/share/27e8cab450964b748847ff477b49ecdb)
+
+The walkthrough covers:
+
+- Product listing, deals, and categories
+- Debounced search
+- Product details and related products
+- Cart quantity controls and persistence
+- Theme preferences
+- Analytics activity history
+- Return Policy WebView
+
 ## Features
 
 - Paginated product listing with infinite scroll
