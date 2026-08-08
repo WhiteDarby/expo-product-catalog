@@ -2,11 +2,11 @@ import { useLayoutEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import { HomeStackParamList } from '../navigation/types';
 import { useAppTheme } from '../theme/theme';
 
 type ReturnPolicyScreenProps = NativeStackScreenProps<
-  RootStackParamList,
+  HomeStackParamList,
   'ReturnPolicy'
 >;
 

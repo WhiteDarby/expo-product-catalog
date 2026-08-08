@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import {
   Image,
   Pressable,
@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { RootStackParamList } from '../navigation/types';
+import { TabParamList } from '../navigation/types';
 import { useAppTheme } from '../theme/theme';
 import {
   clearCart,
@@ -28,13 +28,16 @@ function formatPrice(price: number) {
 export function CartScreen() {
   const dispatch = useAppDispatch();
   const { colors } = useAppTheme();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<BottomTabNavigationProp<TabParamList, 'Cart'>>();
   const items = useAppSelector(selectCartItems);
   const subtotal = useAppSelector(selectCartSubtotal);
 
   const openProduct = useCallback(
     (productId: number) => {
-      navigation.navigate('ProductDetail', { productId });
+      navigation.navigate('Home', {
+        params: { productId },
+        screen: 'ProductDetail',
+      });
     },
     [navigation],
   );

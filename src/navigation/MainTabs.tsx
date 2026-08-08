@@ -1,8 +1,8 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { CartScreen } from '../screens/CartScreen';
-import { ProductListingScreen } from '../screens/ProductListingScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { HomeStackNavigator } from './HomeStack';
 import { useAppSelector } from '../store/hooks';
 import { selectCartCount } from '../store/cartSlice';
 import { useAppTheme } from '../theme/theme';
@@ -43,7 +43,7 @@ export function MainTabs() {
     >
       <Tabs.Screen
         name="Home"
-        component={ProductListingScreen}
+        component={HomeStackNavigator}
         options={{
           tabBarIcon: ({ color, focused }) => (
             <Ionicons color={color} name={focused ? 'home' : 'home-outline'} size={22} />

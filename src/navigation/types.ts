@@ -1,11 +1,13 @@
-export type RootStackParamList = {
-  MainTabs: undefined;
+import { NavigatorScreenParams } from '@react-navigation/native';
+
+export type HomeStackParamList = {
+  Catalog: undefined;
   ProductDetail: { productId: number };
   ReturnPolicy: undefined;
 };
 
 export type TabParamList = {
-  Home: undefined;
+  Home: NavigatorScreenParams<HomeStackParamList>;
   Cart: undefined;
   Settings: undefined;
 };

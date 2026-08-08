@@ -15,7 +15,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProductCard } from '../components/ProductCard';
-import { RootStackParamList } from '../navigation/types';
+import { HomeStackParamList } from '../navigation/types';
 import { fetchProductById, fetchProducts } from '../services/products';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
@@ -29,7 +29,7 @@ import { useAppTheme } from '../theme/theme';
 import { Product } from '../types/product';
 
 type ProductDetailScreenProps = NativeStackScreenProps<
-  RootStackParamList,
+  HomeStackParamList,
   'ProductDetail'
 >;
 

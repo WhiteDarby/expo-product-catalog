@@ -19,7 +19,7 @@ import { DealsCarousel } from '../components/DealsCarousel';
 import { ProductCard } from '../components/ProductCard';
 import { SearchBar } from '../components/SearchBar';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { RootStackParamList } from '../navigation/types';
+import { HomeStackParamList } from '../navigation/types';
 import {
   loadCatalogSections,
   loadProducts,
@@ -37,7 +37,7 @@ export function ProductListingScreen() {
   const listRef = useRef<FlatList<Product>>(null);
   const dispatch = useAppDispatch();
   const { colors } = useAppTheme();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const {
     categories,
     category: selectedCategory,
