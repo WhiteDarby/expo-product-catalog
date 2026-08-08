@@ -24,8 +24,8 @@ import {
   increaseQuantity,
   selectCartItems,
 } from '../store/cartSlice';
-import { recordEvent } from '../store/analyticsSlice';
 import { useAppTheme } from '../theme/theme';
+import { trackEvent } from '../utils/analytics';
 import { Product } from '../types/product';
 
 type ProductDetailScreenProps = NativeStackScreenProps<
@@ -62,15 +62,9 @@ export function ProductDetailScreen({ navigation, route }: ProductDetailScreenPr
       if (currentRequest !== requestId.current) return;
 
       setProduct(productResponse);
-      dispatch(
-        recordEvent({
-          metadata: { productId: productResponse.id, productTitle: productResponse.title },
-          type: 'product_viewed',
-        }),
-      );
-      console.log('product_viewed', {
+      trackEvent(dispatch, 'product_viewed', {
         productId: productResponse.id,
-        timestamp: new Date().toISOString(),
+        productTitle: productResponse.title,
       });
 
       try {
@@ -125,15 +119,9 @@ export function ProductDetailScreen({ navigation, route }: ProductDetailScreenPr
 
   const handleAddToCart = () => {
     dispatch(addToCart(product));
-    dispatch(
-      recordEvent({
-        metadata: { productId: product.id, productTitle: product.title },
-        type: 'add_to_cart',
-      }),
-    );
-    console.log('add_to_cart', {
+    trackEvent(dispatch, 'add_to_cart', {
       productId: product.id,
-      timestamp: new Date().toISOString(),
+      productTitle: product.title,
     });
   };
 

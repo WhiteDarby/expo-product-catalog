@@ -7,7 +7,8 @@ export type AnalyticsEventType =
   | 'search_performed'
   | 'app_backgrounded';
 
-export type AnalyticsMetadata = Record<string, string | number>;
+export type AnalyticsEventMetadata = Record<string, string | number>;
+export type AnalyticsMetadata = AnalyticsEventMetadata;
 
 export type AnalyticsEvent = {
   id: string;

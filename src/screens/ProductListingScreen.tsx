@@ -26,9 +26,9 @@ import {
   setCategory,
   setQuery,
 } from '../store/productsSlice';
-import { recordEvent } from '../store/analyticsSlice';
 import { Product } from '../types/product';
 import { useAppTheme } from '../theme/theme';
+import { trackEvent } from '../utils/analytics';
 
 export function ProductListingScreen() {
   const [query, setInputQuery] = useState('');
@@ -43,6 +43,7 @@ export function ProductListingScreen() {
     category: selectedCategory,
     error,
     hasMore,
+    isOffline,
     items: products,
     sectionsStatus,
     status,
@@ -74,18 +75,13 @@ export function ProductListingScreen() {
 
   useEffect(() => {
     if (debouncedQuery.trim()) {
-      dispatch(
-        recordEvent({
-          metadata: { query: debouncedQuery.trim() },
-          type: 'search_performed',
-        }),
-      );
+      trackEvent(dispatch, 'search_performed', { query: debouncedQuery.trim() });
     }
     void loadFirstPage(debouncedQuery);
   }, [debouncedQuery, dispatch, loadFirstPage]);
 
   const loadMore = useCallback(async () => {
-    if (isLoading || isLoadingMore || !hasMore || products.length === 0) return;
+    if (isLoading || isRefreshing || isLoadingMore || !hasMore || products.length === 0) return;
     await dispatch(loadProducts({
       category: selectedCategory,
       mode: 'more',
@@ -97,6 +93,7 @@ export function ProductListingScreen() {
     hasMore,
     isLoading,
     isLoadingMore,
+    isRefreshing,
     products.length,
     selectedCategory,
   ]);
@@ -112,9 +109,23 @@ export function ProductListingScreen() {
   };
 
   const renderFooter = useCallback(() => {
-    if (!isLoadingMore) return <View style={styles.footerSpace} />;
-    return <ActivityIndicator color={colors.text} style={styles.footerLoader} />;
-  }, [colors, isLoadingMore]);
+    if (isLoadingMore) {
+      return <ActivityIndicator color={colors.text} style={styles.footerLoader} />;
+    }
+
+    if (error && products.length > 0) {
+      return (
+        <View style={styles.footerError}>
+          <Text style={[styles.footerErrorText, { color: colors.mutedText }]}>Could not load more products</Text>
+          <TouchableOpacity onPress={loadMore}>
+            <Text style={[styles.footerRetryText, { color: colors.accent }]}>Try again</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return <View style={styles.footerSpace} />;
+  }, [colors, error, isLoadingMore, loadMore, products.length]);
 
   const renderEmpty = useCallback(() => {
     if (isLoading) {
@@ -165,12 +176,18 @@ export function ProductListingScreen() {
     setShowScrollTop(event.nativeEvent.contentOffset.y > 500);
   };
 
+  const handleRefresh = useCallback(() => {
+    if (isLoadingMore || isRefreshing) return;
+    void loadFirstPage(debouncedQuery, true);
+  }, [debouncedQuery, isLoadingMore, isRefreshing, loadFirstPage]);
+
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }] }>
       <FlatList
         columnWrapperStyle={styles.columnWrapper}
         contentContainerStyle={styles.listContent}
         data={products}
+        initialNumToRender={8}
         keyExtractor={(item) => String(item.id)}
         onScroll={handleScroll}
         ref={listRef}
@@ -212,15 +229,22 @@ export function ProductListingScreen() {
               </Text>
               {!isLoading && total > 0 ? <Text style={[styles.resultCount, { color: colors.subtleText }]}>{total} items</Text> : null}
             </View>
+            {isOffline ? (
+              <View style={[styles.offlineBanner, { backgroundColor: colors.accentSoft }]}>
+                <Ionicons color={colors.accent} name="cloud-offline-outline" size={15} />
+                <Text style={[styles.offlineText, { color: colors.accent }]}>Offline data</Text>
+              </View>
+            ) : null}
           </View>
         }
         keyboardShouldPersistTaps="handled"
         numColumns={2}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
+        removeClippedSubviews
         refreshControl={
           <RefreshControl
-            onRefresh={() => void loadFirstPage(debouncedQuery, true)}
+            onRefresh={handleRefresh}
             refreshing={isRefreshing}
             tintColor={colors.text}
           />
@@ -228,6 +252,9 @@ export function ProductListingScreen() {
         renderItem={renderProduct}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
+        maxToRenderPerBatch={8}
+        updateCellsBatchingPeriod={50}
+        windowSize={5}
       />
       {showScrollTop ? (
         <Pressable
@@ -270,6 +297,20 @@ const styles = StyleSheet.create({
   footerLoader: {
     paddingVertical: 18,
   },
+  footerError: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingVertical: 18,
+  },
+  footerErrorText: {
+    fontSize: 13,
+    marginRight: 10,
+  },
+  footerRetryText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
   footerSpace: {
     height: 18,
   },
@@ -286,6 +327,20 @@ const styles = StyleSheet.create({
     paddingBottom: 110,
     paddingHorizontal: 16,
     paddingTop: 22,
+  },
+  offlineBanner: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    borderRadius: 10,
+    flexDirection: 'row',
+    marginBottom: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  offlineText: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 5,
   },
   resultCount: {
     color: '#8A8F98',

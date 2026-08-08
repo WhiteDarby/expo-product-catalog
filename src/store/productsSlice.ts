@@ -5,6 +5,7 @@ import {
   fetchTopDeals,
 } from '../services/products';
 import { Product, ProductResponse } from '../types/product';
+import { cacheProducts, readCachedProducts } from '../services/productsCache';
 
 type RequestMode = 'initial' | 'refresh' | 'more';
 
@@ -25,6 +26,7 @@ type ProductState = {
   error: string | null;
   topDeals: Product[];
   categories: string[];
+  isOffline: boolean;
 };
 
 const initialState: ProductState = {
@@ -33,6 +35,7 @@ const initialState: ProductState = {
   error: null,
   hasMore: true,
   items: [],
+  isOffline: false,
   query: '',
   sectionsStatus: 'idle',
   status: 'idle',
@@ -40,13 +43,26 @@ const initialState: ProductState = {
   total: 0,
 };
 
+type ProductLoadResult = {
+  offline: boolean;
+  response: ProductResponse;
+};
+
 export const loadProducts = createAsyncThunk<
-  ProductResponse,
+  ProductLoadResult,
   ProductRequest
 >('products/loadProducts', async ({ category, mode, query }, { getState }) => {
   const state = getState() as { products: ProductState };
   const skip = mode === 'more' ? state.products.items.length : 0;
-  return fetchProducts(query, skip, category ?? undefined);
+  try {
+    const response = await fetchProducts(query, skip, category ?? undefined);
+    await cacheProducts(query, category, skip, response);
+    return { offline: false, response };
+  } catch (error) {
+    const cached = await readCachedProducts(query, category, skip);
+    if (cached) return { offline: true, response: cached };
+    throw error;
+  }
 });
 
 export const loadCatalogSections = createAsyncThunk(
@@ -86,15 +102,17 @@ const productsSlice = createSlice({
         const request = action.meta.arg;
         if (!isCurrentRequest(state, request)) return;
 
-        const incoming = action.payload.products;
+        const response = action.payload.response;
+        const incoming = response.products;
         if (request.mode === 'more') {
           const existingIds = new Set(state.items.map((product) => product.id));
           state.items.push(...incoming.filter((product) => !existingIds.has(product.id)));
         } else {
           state.items = incoming;
         }
-        state.total = action.payload.total;
-        state.hasMore = action.payload.skip + incoming.length < action.payload.total;
+        state.total = response.total;
+        state.hasMore = response.skip + incoming.length < response.total;
+        state.isOffline = action.payload.offline;
         state.status = 'succeeded';
       })
       .addCase(loadProducts.rejected, (state, action) => {

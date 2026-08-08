@@ -1,4 +1,5 @@
 import { ProductResponse } from '../types/product';
+import { fetchWithRetry } from './fetchWithRetry';
 
 const API_URL = 'https://dummyjson.com/products';
 export const PAGE_SIZE = 20;
@@ -14,7 +15,7 @@ export async function fetchProducts(
     ? `${API_URL}/search?q=${encodeURIComponent(query.trim())}&limit=${PAGE_SIZE}&skip=${skip}`
     : `${API_URL}?limit=${PAGE_SIZE}&skip=${skip}`;
 
-  const response = await fetch(endpoint);
+  const response = await fetchWithRetry(endpoint);
 
   if (!response.ok) {
     throw new Error('Unable to load products.');
@@ -24,7 +25,7 @@ export async function fetchProducts(
 }
 
 export async function fetchProductById(id: number): Promise<ProductResponse['products'][number]> {
-  const response = await fetch(`${API_URL}/${id}`);
+  const response = await fetchWithRetry(`${API_URL}/${id}`);
 
   if (!response.ok) {
     throw new Error('Unable to load product details.');
@@ -34,7 +35,7 @@ export async function fetchProductById(id: number): Promise<ProductResponse['pro
 }
 
 export async function fetchTopDeals(): Promise<ProductResponse> {
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `${API_URL}?sortBy=discountPercentage&order=desc&limit=6`,
   );
 
@@ -46,7 +47,7 @@ export async function fetchTopDeals(): Promise<ProductResponse> {
 }
 
 export async function fetchCategories(): Promise<string[]> {
-  const response = await fetch(`${API_URL}/categories`);
+  const response = await fetchWithRetry(`${API_URL}/categories`);
 
   if (!response.ok) {
     throw new Error('Unable to load categories.');

@@ -5,8 +5,8 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
   ANALYTICS_STORAGE_KEY,
   hydrateAnalytics,
-  recordEvent,
 } from '../store/analyticsSlice';
+import { trackEvent } from '../utils/analytics';
 
 export function AnalyticsPersistence() {
   const dispatch = useAppDispatch();
@@ -29,12 +29,10 @@ export function AnalyticsPersistence() {
         previousState === 'active' &&
         (nextState === 'background' || nextState === 'inactive')
       ) {
-        dispatch(
-          recordEvent({
-            metadata: { fromState: previousState, toState: nextState },
-            type: 'app_backgrounded',
-          }),
-        );
+        trackEvent(dispatch, 'app_backgrounded', {
+          fromState: previousState,
+          toState: nextState,
+        });
       }
       previousAppState.current = nextState;
     });
